@@ -14,7 +14,7 @@ In order to install it, add the following to your =build.boot= dependencies:
 #+END_SRC
 In addition require the task, specifically =cljs-devtools=.
 #+BEGIN_SRC clojure
-(require '[powerlaces.boot-cljs-devtools :refer [cljs-devtools])
+(require '[powerlaces.boot-cljs-devtools :refer [cljs-devtools]])
 #+END_SRC
 Currently files may be generated in the =out= directory, so it would be advisable to add that to someplace like in a =.gitignore=.
 ** Usage
