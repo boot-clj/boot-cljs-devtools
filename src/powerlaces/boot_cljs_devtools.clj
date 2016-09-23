@@ -9,8 +9,10 @@
 
 (def ^:private deps '#{binaryage/devtools binaryage/dirac})
 
-(defn- add-preloads! [in-file out-file]
-  (let [preloads ['devtools.preload 'powerlaces.boot-cljs-devtools.preload]
+(defn- add-preloads! [in-file out-file dirac-disabled?]
+  (let [preloads (if dirac-disabled?
+                   ['devtools.preload]
+                   ['devtools.preload 'powerlaces.boot-cljs-devtools.preload])
         spec (-> in-file slurp read-string)]
     (when (not= :nodejs (-> spec :compiler-options :target))
       (util/info
@@ -42,9 +44,10 @@
         f)))
 
 (defn- start-dirac! [config]
-  (boot.util/dbug "Starting Dirac...\n")
-  (require 'dirac.agent)
-  ((resolve 'dirac.agent/boot!) config))
+  (when-not (:disabled config)
+    (boot.util/dbug "Starting Dirac...\n")
+    (require 'dirac.agent)
+    ((resolve 'dirac.agent/boot!) config)))
 
 (def nrepl-defaults
   {:port 8230
@@ -76,7 +79,7 @@
                in-file (boot/tmp-file f)
                out-file (io/file tmp path)]
            (io/make-parents out-file)
-           (add-preloads! in-file out-file)))
+           (add-preloads! in-file out-file (:disabled dirac-opts))))
        (reset! prev fileset)
        (-> fileset
            (boot/add-resource tmp)
