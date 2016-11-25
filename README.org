@@ -11,7 +11,10 @@ In order to install it, add the following to your =build.boot= dependencies:
 [binaryage/devtools      "0.8.2" :scope "test"]
 [binaryage/dirac         "0.7.1" :scope "test"]
 [powerlaces/boot-cljs-devtools "0.X.X" :scope "test"]
+[org.clojure/clojurescript "1.9.293"] ;; see below
 #+END_SRC
+Note that boot-cljs-devtools requires ClojureScript version 1.9.89 or later for its =:preloads= feature.
+
 In addition require the task, specifically =cljs-devtools=.
 #+BEGIN_SRC clojure
 (require '[powerlaces.boot-cljs-devtools :refer [cljs-devtools]])
