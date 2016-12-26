@@ -1,6 +1,6 @@
 * boot-cljs-devtools
 ** About
-[[https://github.com/boot-clj/boot][Boot]] task introducing enhancements to CLJS development in Chrome, specifically [[https://github.com/binaryage/cljs-devtools][CLJS DevTools]] and [[https://github.com/binaryage/dirac][Dirac]].
+[[https://github.com/boot-clj/boot][Boot]] tasks introducing enhancements to CLJS development in Chrome, specifically [[https://github.com/binaryage/cljs-devtools][CLJS DevTools]] and [[https://github.com/binaryage/dirac][Dirac]].
 ** Installation
 Latest version:
 
@@ -8,25 +8,50 @@ Latest version:
 
 In order to install it, add the following to your =build.boot= dependencies:
 #+BEGIN_SRC clojure
-[binaryage/devtools      "0.8.3" :scope "test"]
-[binaryage/dirac         "0.8.7" :scope "test"]
+[binaryage/devtools      "0.8.3" :scope "test"] ;; when you want cljd-devtools or both
+[binaryage/dirac         "0.8.7" :scope "test"] ;; when you want dirac or both
 [powerlaces/boot-cljs-devtools "0.X.X" :scope "test"]
 [org.clojure/clojurescript "1.9.293"] ;; see below
 #+END_SRC
 Note that boot-cljs-devtools requires ClojureScript version 1.9.89 or later for its =:preloads= feature.
 
-In addition require the task, specifically =cljs-devtools=.
+In addition require the task, specifically =cljs-devtools=:
 #+BEGIN_SRC clojure
 (require '[powerlaces.boot-cljs-devtools :refer [cljs-devtools]])
 #+END_SRC
+
+or specifically =dirac=:
+#+BEGIN_SRC clojure
+(require '[powerlaces.boot-cljs-devtools :refer [dirac]])
+#+END_SRC
+
+or both =cljs-devtools= and =dirac=:
+#+BEGIN_SRC clojure
+(require '[powerlaces.boot-cljs-devtools :refer [cljs-devtools dirac]])
+#+END_SRC
+
 Currently files may be generated in the =out= directory, so it would be advisable to add that to someplace like in a =.gitignore=.
 ** Usage
 Ensure that this task runs before the =cljs= and after the =watch= task and that you include a =.cljs.edn= file according to [[https://github.com/adzerk-oss/boot-cljs/wiki/Usage#multiple-builds][this]].
-Task example:
+
+Task example for cljs-devtools:
 #+BEGIN_SRC clojure
 (deftask dev []
   (comp (watch) (cljs-devtools) (cljs)))
 #+END_SRC
+
+Task example for dirac:
+#+BEGIN_SRC clojure
+(deftask dev []
+  (comp (watch) (dirac) (cljs)))
+#+END_SRC
+
+Task example for both cljs-devtools and dirac:
+#+BEGIN_SRC clojure
+(deftask dev []
+  (comp (watch) (cljs-devtools) (dirac) (cljs)))
+#+END_SRC
+
 File =your-ns.cljs.edn= example:
 #+BEGIN_SRC clojure
 {:require  [your-ns.core]
