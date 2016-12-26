@@ -9,9 +9,8 @@
 
 (def ^:private deps '#{binaryage/devtools binaryage/dirac})
 
-(defn- add-preloads! [in-file out-file]
-  (let [preloads ['devtools.preload 'dirac.runtime.preload]
-        spec (-> in-file slurp read-string)]
+(defn- add-preloads! [preloads in-file out-file]
+  (let [spec (-> in-file slurp read-string)]
     (when (not= :nodejs (-> spec :compiler-options :target))
       (util/info
        "Adding :preloads %s to %s...\n"
@@ -21,6 +20,12 @@
           (update-in [:compiler-options :preloads] #(into preloads %))
           pr-str
           ((partial spit out-file))))))
+
+(defn- add-cljs-devtools-preload! [in-file out-file]
+  (add-preloads! ['devtools.preload] in-file out-file))
+
+(defn- add-dirac-preload! [in-file out-file]
+  (add-preloads! ['dirac.runtime.preload] in-file out-file))
 
 (defn- assert-deps []
   (let [current (->> (boot/get-env :dependencies)
@@ -52,6 +57,20 @@
    :middleware ['dirac.nrepl/middleware]})
 
 (boot/deftask cljs-devtools
+  (comp
+   (boot/with-pre-wrap fileset
+     (doseq [f (relevant-cljs-edn @prev fileset ids)]
+       (let [path (boot/tmp-path f)
+             in-file (boot/tmp-file f)
+             out-file (io/file tmp path)]
+         (io/make-parents out-file)
+         (add-cljs-devtools-preload! in-file out-file)))
+     (reset! prev fileset)
+     (-> fileset
+         (boot/add-resource tmp)
+         (boot/commit!)))))
+
+(boot/deftask dirac
   "Add Chrome Devtool enhancements for ClojureScript development."
   [b ids        BUILD_IDS  #{str} "Only inject devtools into these builds (= .cljs.edn files)"
    n nrepl-opts NREPL_OPTS edn     "Options passed to boot's `repl` task."
@@ -76,7 +95,7 @@
                in-file (boot/tmp-file f)
                out-file (io/file tmp path)]
            (io/make-parents out-file)
-           (add-preloads! in-file out-file)))
+           (add-dirac-preload! in-file out-file)))
        (reset! prev fileset)
        (-> fileset
            (boot/add-resource tmp)
