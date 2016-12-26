@@ -57,30 +57,34 @@
    :middleware ['dirac.nrepl/middleware]})
 
 (boot/deftask cljs-devtools
+  "Add Chrome cljs-devtools enhancements for ClojureScript development."
+  [b ids BUILD_IDS  #{str} "Only inject devtools into these builds (= .cljs.edn files)"]
+  (let [tmp  (boot/tmp-dir!)
+        prev (atom nil)]
   (comp
    (boot/with-pre-wrap fileset
      (doseq [f (relevant-cljs-edn @prev fileset ids)]
-       (let [path (boot/tmp-path f)
-             in-file (boot/tmp-file f)
+       (let [path     (boot/tmp-path f)
+             in-file  (boot/tmp-file f)
              out-file (io/file tmp path)]
          (io/make-parents out-file)
          (add-cljs-devtools-preload! in-file out-file)))
      (reset! prev fileset)
      (-> fileset
          (boot/add-resource tmp)
-         (boot/commit!)))))
+         (boot/commit!))))))
 
 (boot/deftask dirac
-  "Add Chrome Devtool enhancements for ClojureScript development."
+  "Add dirac enhancements for ClojureScript development."
   [b ids        BUILD_IDS  #{str} "Only inject devtools into these builds (= .cljs.edn files)"
    n nrepl-opts NREPL_OPTS edn     "Options passed to boot's `repl` task."
    d dirac-opts DIRAC_OPTS edn     "Options passed to dirac."]
-  (let [tmp (boot/tmp-dir!)
-        prev (atom nil)
-        nrepl-opts (cond-> (merge nrepl-defaults nrepl-opts)
-                     (get-in dirac-opts [:nrepl-server :port]) (assoc :port (get-in dirac-opts [:nrepl-server :port])))
-        dirac-opts (cond-> (or dirac-opts {})
-                     (:port nrepl-opts) (assoc-in [:nrepl-server :port] (:port nrepl-opts)))
+  (let [tmp              (boot/tmp-dir!)
+        prev             (atom nil)
+        nrepl-opts       (cond-> (merge nrepl-defaults nrepl-opts)
+                           (get-in dirac-opts [:nrepl-server :port]) (assoc :port (get-in dirac-opts [:nrepl-server :port])))
+        dirac-opts       (cond-> (or dirac-opts {})
+                           (:port nrepl-opts) (assoc-in [:nrepl-server :port] (:port nrepl-opts)))
         start-dirac-once (delay (start-dirac! dirac-opts))]
     (util/dbug "Normalized nrepl-opts %s\n" nrepl-opts)
     (util/dbug "Normalize dirac-opts %s\n"dirac-opts)
@@ -91,8 +95,8 @@
     (comp
      (boot/with-pre-wrap fileset
        (doseq [f (relevant-cljs-edn @prev fileset ids)]
-         (let [path (boot/tmp-path f)
-               in-file (boot/tmp-file f)
+         (let [path     (boot/tmp-path f)
+               in-file  (boot/tmp-file f)
                out-file (io/file tmp path)]
            (io/make-parents out-file)
            (add-dirac-preload! in-file out-file)))
