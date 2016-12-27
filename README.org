@@ -8,8 +8,8 @@ Latest version:
 
 In order to install it, add the following to your =build.boot= dependencies:
 #+BEGIN_SRC clojure
-[binaryage/devtools      "0.8.3" :scope "test"] ;; when you want cljd-devtools or both
-[binaryage/dirac         "0.8.7" :scope "test"] ;; when you want dirac or both
+[binaryage/devtools      "X.X.X" :scope "test"] ;; when you want cljd-devtools or both, replace X.X.X for current version
+[binaryage/dirac         "X.X.X" :scope "test"] ;; when you want dirac or both, replace X.X.X for current version
 [powerlaces/boot-cljs-devtools "0.X.X" :scope "test"]
 [org.clojure/clojurescript "1.9.293"] ;; see below
 #+END_SRC
