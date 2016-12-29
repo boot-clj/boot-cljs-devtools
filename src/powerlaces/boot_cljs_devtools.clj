@@ -9,16 +9,18 @@
 
 (def ^:private deps '#{binaryage/devtools binaryage/dirac})
 
-(defn- add-preloads! [in-file out-file]
-  (let [preloads ['devtools.preload 'dirac.runtime.preload]
-        spec (-> in-file slurp read-string)]
+(def ^:private preloads {:cljs-devtools 'devtools.preload :dirac 'dirac.runtime.preload})
+
+(defn- add-preload! [lib in-file out-file]
+  (let [spec (-> in-file slurp read-string)
+        preload (get preloads lib)]
     (when (not= :nodejs (-> spec :compiler-options :target))
       (util/info
        "Adding :preloads %s to %s...\n"
-       preloads (.getName in-file))
+       preload (.getName in-file))
       (io/make-parents out-file)
       (-> spec
-          (update-in [:compiler-options :preloads] #(into preloads %))
+          (update-in [:compiler-options :preloads] #(conj % preload))
           pr-str
           ((partial spit out-file))))))
 
@@ -52,10 +54,27 @@
    :middleware ['dirac.nrepl/middleware]})
 
 (boot/deftask cljs-devtools
-  "Add Chrome Devtool enhancements for ClojureScript development."
-  [b ids        BUILD_IDS  #{str} "Only inject devtools into these builds (= .cljs.edn files)"
-   n nrepl-opts NREPL_OPTS edn     "Options passed to boot's `repl` task."
-   d dirac-opts DIRAC_OPTS edn     "Options passed to dirac."]
+  "Add Chrome cljs-devtools enhancements for ClojureScript development."
+  [b ids BUILD_IDS  #{str} "Only inject devtools into these builds (= .cljs.edn files)"]
+  (let [tmp (boot/tmp-dir!)
+        prev (atom nil)]
+    (comp
+     (boot/with-pre-wrap fileset
+       (doseq [f (relevant-cljs-edn @prev fileset ids)]
+         (let [path (boot/tmp-path f)
+               in-file (boot/tmp-file f)
+               out-file (io/file tmp path)]
+           (add-preload! :cljs-devtools in-file out-file)))
+       (reset! prev fileset)
+       (-> fileset
+           (boot/add-resource tmp)
+           (boot/commit!))))))
+
+(boot/deftask dirac
+  "Add dirac enhancements for ClojureScript development."
+  [b ids BUILD_IDS #{str} "Only inject devtools into these builds (= .cljs.edn files)"
+   n nrepl-opts NREPL_OPTS edn "Options passed to boot's `repl` task."
+   d dirac-opts DIRAC_OPTS edn "Options passed to dirac."]
   (let [tmp (boot/tmp-dir!)
         prev (atom nil)
         nrepl-opts (cond-> (merge nrepl-defaults nrepl-opts)
@@ -75,8 +94,7 @@
          (let [path (boot/tmp-path f)
                in-file (boot/tmp-file f)
                out-file (io/file tmp path)]
-           (io/make-parents out-file)
-           (add-preloads! in-file out-file)))
+           (add-preload! :dirac in-file out-file)))
        (reset! prev fileset)
        (-> fileset
            (boot/add-resource tmp)
