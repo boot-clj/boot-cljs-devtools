@@ -3,11 +3,11 @@
   (:require [boot.core          :as    boot]
             [boot.task.built-in :refer [repl]]
             [boot.util          :as    util]
+            [clojure.set        :as    set]
             [clojure.java.io    :as    io]
-            [clojure.string     :as    str]
-            [dirac.agent.config :as    dirac-conf]))
+            [clojure.string     :as    str]))
 
-(def ^:private deps '#{binaryage/devtools binaryage/dirac})
+(def ^:private deps '{:cljs-devtools #{binaryage/devtools} :dirac #{binaryage/dirac}})
 
 (def ^:private preloads {:cljs-devtools 'devtools.preload :dirac 'dirac.runtime.preload})
 
@@ -24,11 +24,11 @@
           pr-str
           ((partial spit out-file))))))
 
-(defn- assert-deps []
+(defn- assert-deps [lib]
   (let [current (->> (boot/get-env :dependencies)
                      (map first)
                      set)
-        missing (remove current deps)]
+        missing (set/difference (get deps lib) current)]
     (if (seq missing)
       (util/warn (str "You are missing necessary dependencies for boot-cljs-repl.\n"
                       "Please add the following dependencies to your project:\n"
@@ -58,6 +58,7 @@
   [b ids BUILD_IDS  #{str} "Only inject devtools into these builds (= .cljs.edn files)"]
   (let [tmp (boot/tmp-dir!)
         prev (atom nil)]
+    (assert-deps :cljs-devtools)
     (comp
      (boot/with-pre-wrap fileset
        (doseq [f (relevant-cljs-edn @prev fileset ids)]
@@ -84,7 +85,7 @@
         start-dirac-once (delay (start-dirac! dirac-opts))]
     (util/dbug "Normalized nrepl-opts %s\n" nrepl-opts)
     (util/dbug "Normalize dirac-opts %s\n"dirac-opts)
-    (assert-deps)
+    (assert-deps :dirac)
     (assert (= (:port nrepl-opts) (get-in dirac-opts [:nrepl-server :port]))
             (format "Nrepl's :port (%s) and Dirac's [:nrepl-server :port] (%s) are not the same."
                     (:port nrepl-opts) (get-in dirac-opts [:nrepl-server :port])))
