@@ -29,10 +29,10 @@
                      (map first)
                      set)
         missing (set/difference (get deps lib) current)]
-    (if (seq missing)
-      (util/warn (str "You are missing necessary dependencies for boot-cljs-devtools.\n"
-                      "Please add the following dependencies to your project:\n"
-                      (str/join "\n" missing) "\n")))))
+    (assert (not (seq missing))
+            (str "You are missing necessary dependencies for boot-cljs-devtools.\n"
+                 "Please add the missing dependencies to your project:\n"
+                 (str/join "\n" missing) "\n"))))
 
 (defn- relevant-cljs-edn [prev fileset ids]
   (let [relevant (map #(str % ".cljs.edn") ids)
