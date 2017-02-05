@@ -4,7 +4,7 @@
 
 (require '[adzerk.bootlaces :refer :all])
 
-(def +version+ "0.1.3-SNAPSHOT")
+(def +version+ "0.2.0")
 
 (bootlaces! +version+)
 
@@ -15,3 +15,12 @@
       :url         "https://github.com/boot-clj/boot-cljs-devtools"
       :scm         {:url "https://github.com/boot-clj/boot-cljs-devtools"}
       :license     {"MIT" "https://opensource.org/licenses/MIT"}})
+
+(def snapshot? #(.endsWith +version+ "-SNAPSHOT"))
+
+(deftask deploy []
+  (comp
+   (build-jar)
+   (if (snapshot?)
+     (push-snapshot)
+     (push-release))))
